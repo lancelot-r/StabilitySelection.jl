@@ -1,0 +1,7 @@
+name = "StabilitySelection"
+uuid = "9920510d-a674-4301-82bf-c6690f1e083a"
+authors = ["lancelot-r <lancelotravier@gmail.com>"]
+version = "0.0.1"
+
+[compat]
+julia = "1.10"
