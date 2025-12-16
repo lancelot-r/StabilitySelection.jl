@@ -1,0 +1,124 @@
+---
+title: "TP noté 5 SGD"
+author: "(Tiers-Temps) Lancelot Ravier"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-11-21"
+---
+```{r}
+library(glmnet)
+```
+
+```{r}
+data = read.csv("bike+sharing+dataset/day.csv")
+```
+
+```{r}
+X = as.matrix(data[, -c(1, 2, 14, 15, 16)]) # on enlève ici la date, difficile à encoder
+y = data$cnt
+```
+
+Nous allons tout d'abord vérifier si les données sont compatible avec le modèle de poisson (y entier positif, variance $\simeq$ moyenne) ainsi que la présence d'outliers ou de NA.
+
+```{r}
+# y entier positif
+all(y >= 0)
+all(y %% 1 == 0)
+
+# Aucune valeur manquante
+sum(is.na(data))
+
+mean(y);var(y)
+```
+
+```{r}
+summary(X)
+boxplot(y)
+```
+
+Toutes les donénes sont de type numerique ou binaire (pas de listes). On ne détecte aucune valeur manquante ni abérante (on voit que le $3^{eme}$ quartile est proche du max pour toutes les variables et aucun point sur le boxplot de y). Aussi, toutes les valeurs de y sont des entiers positifs, mais on voit que la variance de y est bien plus grande que sa moyenne. Mème si cela compromet les hypothèses du modèle de poisson, nous pouvons toujours utiliser (non pas le modèle, mais) la régresison de poisson comme modèle de prédiction.
+
+## Fit du modèle
+
+```{r}
+set.seed(123)
+fit = cv.glmnet(X, y, family="poisson", alpha=1) #lasso glmnet avec cross-validation
+coefs_lasso = coef(fit, s = fit$lambda.1se)
+coefs_lasso[-1,]
+```
+on voit ici que le modèle lasso séléctionne 4 variables : season, atemp, casual et registered, dont il considère qu'elles ont un effet sur la prédiction du nombre de vélos loués à la journée. Cependant, la sélection lasso à une itération n'est pas toujours robustes aux changements de donneés et ne se généralise pas tout le temps. Pour cette raison, nous allons appliquer la procédure de stability selection pour identifier des variables séléctionnées de manière stable entre les itérations bootstrap, mème lorsque les hypothèses ne sont pas respectées.
+
+```{r}
+set.seed(123)
+B = 100 # 100 iterations
+p = ncol(X)
+selection_matrix = matrix(0, nrow = B, ncol = p)
+colnames(selection_matrix) = colnames(X)
+
+for (b in 1:B) {
+  idx = sample(seq_len(nrow(df)), replace = TRUE)
+  Xb = X[idx, ]
+  yb = y[idx]
+  cvb = cv.glmnet(x = Xb, y = yb, family = "poisson", alpha = 1)
+  coef_b = coef(cvb, s = cvb$lambda.1se) # on selectionne à lambda_1se
+  selected = which(coef_b[-1] != 0) # procédure pour compter si selectionnée ou non
+  selection_matrix[b, selected] = 1
+}
+
+stability = colMeans(selection_matrix) # taux de selection sur les 100 iterations
+stability
+```
+Après avoir implémenté la procédure de stability selection, on peut voir que les 3 variables séléctionnées de manière stable (atemp, casual, registered $= 100\%$) étaient aussi selectionnées par le modèle lasso plus haut. Ces prédicteurs sont donc considérés par le modèle lasso comme essentielles pour prédire le nombre total de vélos loués par jour.  season est selectionnée de manière moins stable, mais tout de mème de manière raisonable ($>80\%$) : Le modèle lasso donne de l'importance à la saison pour prédire le nombre de vélos loués par jour, mais pas sur tout les samples. Enfin, on voit que la stability selection repère une dernière variable (weathersit) séléctionnée de manière faible mais tout de mème selectionnée parfois : le modèle donne donc une importance faible à la météo dans la prédiction du onmbre de vélos loués par jour, mais non-nulle tout de mème. Toutes les autres variables ne contribuent pas, selon le modèle lasso, à la prédiction du nombre de vélos loués par jour, ces variables étant exclues à chaque itération pour $\lambda_{1se}$.
+
+Lors de la procédure de stability selection, on vérifie combien de fois une variable est selectionnée, en ajustant des modèles Lasso sur plusieurs sous-jeux de donneés tirées aléatoirement. Ainsi, plus une variable est selectionnée, plus l'effet de cette dernière est généralisé sur les différentes observations et plus son effet prédictif est fort sur y.
+
+# Selection post-inférence
+
+```{r}
+X_active = X[, c("season", "atemp", "casual", "registered")] # les 4 variables selecitonnées lors du cv.glmnet en partie 1
+mod_emv = glm(y ~ X_active, family = poisson)
+summary(mod_emv)
+```
+
+```{r}
+library(glmnet)
+
+set.seed(123)
+
+data = read.csv("")
+X <- as.matrix(X)
+y <- as.numeric(y)
+
+n <- nrow(X)
+p <- ncol(X)
+
+B <- 100
+selection_matrix <- matrix(0, nrow = B, ncol = p)
+
+for (b in 1:B) {
+  idx <- sample(seq_len(n), size = floor(n / 2), replace = FALSE)
+  X_sub <- X[idx, ]
+  y_sub <- y[idx]
+  
+  cv_fit <- cv.glmnet(X_sub, y_sub, alpha = 1, standardize = TRUE)
+  beta <- coef(cv_fit, s = "lambda.1se")[-1]
+  
+  selection_matrix[b, ] <- as.numeric(beta != 0)
+}
+
+selection_prob <- colMeans(selection_matrix)
+names(selection_prob) <- colnames(X)
+
+thresholds <- seq(0.6, 1, by = 0.05)
+
+selected_variables <- lapply(thresholds, function(th) {
+  names(selection_prob[selection_prob >= th])
+})
+
+names(selected_variables) <- paste0("threshold_", thresholds)
+
+selection_prob
+selected_variables
+```
+

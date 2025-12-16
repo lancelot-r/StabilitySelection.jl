@@ -3,7 +3,7 @@ using CSV
 using DataFrames
 using StabilitySelection
 
-data = CSV.read("test/data/datatest.csv", DataFrame)
+data = CSV.read("test/data/epiclock.csv", DataFrame)
 
 X = Matrix(data[:, 4:end])
 y = data[:, 2]
