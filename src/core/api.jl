@@ -10,6 +10,7 @@ using Random
 
 export stability_selection, stability_path, select_variables
 
+# fonction principale
 function stability_selection(
     X, y;
     B = 100,
@@ -41,6 +42,7 @@ function stability_selection(
     ))
 end
 
+# fonction pour calculer les chemins de selection
 function stability_path(
     X, y;
     B = 100,

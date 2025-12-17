@@ -4,6 +4,7 @@ using GLMNet
 using Random
 using Distributions
 
+# calcul du lambda_min et lambda_1se en utilisant la validation croisée
 function compute_lambda_min_1se(cv)
     meanloss = cv.meanloss
     stdloss = cv.stdloss
@@ -19,6 +20,7 @@ function compute_lambda_min_1se(cv)
     return lambda_min, lambda_1se
 end
 
+# régression pour chaque subsample en utilisant la fonction glmnet julia
 function fit_glmnet_subsample(
     X,
     y,

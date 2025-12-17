@@ -2,6 +2,7 @@ module Subsampling
 
 using Random
 
+# fonction pour le bootstrap (generation de sous-ensembles de données)
 function generate_subsamples(n::Int, B::Int, fraction::Real, rng)
     k = floor(Int, n * fraction)
     samples = Vector{Vector{Int}}(undef, B)
@@ -11,6 +12,7 @@ function generate_subsamples(n::Int, B::Int, fraction::Real, rng)
     return samples
 end
 
+# mème fonction dans le cas où on précise une stratification
 function generate_subsamples_stratified(y::AbstractVector, B::Int, fraction::Real, rng)
     pos = findall(==(1), y)
     neg = findall(==(0), y)

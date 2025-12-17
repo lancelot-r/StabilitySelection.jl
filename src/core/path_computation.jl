@@ -3,6 +3,7 @@ module PathComputation
 using Random
 using ..GLMNetWrapper: fit_glmnet_subsample
 
+# fonction pour calculer les chemins de régularisation
 function compute_stability_path(
     X,
     y,

@@ -28,5 +28,17 @@ struct StabilityResult
     selected :: Vector{Int}
     metadata :: Dict{Symbol, Any}
 
+---
 
+## Temps d'exécution R
 
+Les temps d'exécution R affichés lors de l'execution du fichier "test/runtests.jl" ont été obtenus en utilisant un algorithme de stabsel simmilaire à celui du package et les donnes "epiclock.csv", avec les configurations suivantes : 16GB RAM / CPU M1 PRO / GPU APPLE M1 PRO
+
+---
+
+# Graphiques
+
+Deux types de graphiques sont fournis avec le package :
+
+- plot_frequencies(results) : plot des fréquences de selection de toutes les variables
+- plot_selected(results) : plot des variables selectionnées

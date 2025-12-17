@@ -5,6 +5,7 @@ using ..Types: StabilityResult
 
 export plot_frequencies, plot_selected
 
+# fonction pour plot les fréquences de selection
 function plot_frequencies(result::StabilityResult)
     freqs = result.frequencies
     p = length(freqs)
@@ -23,6 +24,7 @@ function plot_frequencies(result::StabilityResult)
     fig 
 end
 
+# fonction pour plot les variables selectionnées
 function plot_selected(result::StabilityResult)
     freqs = result.frequencies
     selected = result.selected

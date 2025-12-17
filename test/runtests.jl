@@ -17,3 +17,5 @@ time_path = @elapsed paths = stability_path(X, y; B=10)
 @test isa(results.frequencies, Vector{Float64})
 @test length(results.frequencies) == size(X, 2)
 @test isa(results.selected, Vector{Int})
+
+plot_selected(results)

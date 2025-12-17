@@ -1,5 +1,6 @@
 module Aggregation
 
+# frequences de selection pour chaque variable
 function compute_frequencies(selections::Vector{Vector{Int}}, p::Int)
     B = length(selections)
     freqs = zeros(Float64, p)
@@ -11,6 +12,7 @@ function compute_frequencies(selections::Vector{Vector{Int}}, p::Int)
     return freqs ./ B
 end
 
+# comptage des fréquences de selection
 function compute_counts(selections::Vector{Vector{Int}}, p::Int)
     counts = zeros(Int, p)
     for sel in selections
